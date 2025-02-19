@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: todo_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER:-todouser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-todopassword}
+      POSTGRES_DB: ${DB_NAME:-tododb}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - todo_network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: todo_app
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_USER: ${DB_USER:-todouser}
+      DB_PASSWORD: ${DB_PASSWORD:-todopassword}
+      DB_NAME: ${DB_NAME:-tododb}
+      DB_PORT: ${DB_PORT:-5432}
+      PORT: ${PORT:-3000}
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    networks:
+      - todo_network
+
+networks:
+  todo_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
